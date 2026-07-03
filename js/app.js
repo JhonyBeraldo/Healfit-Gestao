@@ -88,6 +88,7 @@ function go(v, el) {
   if (v === 'dashboard' && typeof carregarDashboard === 'function') carregarDashboard();
   if (v === 'alunos'    && typeof carregarAlunos    === 'function') carregarAlunos();
   if (v === 'personais' && typeof carregarPersonais === 'function') carregarPersonais();
+  if (v === 'financeiro' && typeof carregarFinanceiro === 'function') carregarFinanceiro();
 }
 
 boot();
