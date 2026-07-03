@@ -1,6 +1,6 @@
 /* ============================================================
    HEALFIT — MÓDULO ALUNOS (CRUD + fatura imediata + WhatsApp)
-   v1.1 — CPF obrigatório para gerar fatura (exigência Asaas)
+   v1.2 — exclusão cancela cobranças abertas no Asaas (via Edge Function)
    ============================================================ */
 let ALUNOS = [];          // cache da lista atual
 let PLANOS = [];
@@ -180,9 +180,11 @@ async function excluirAluno(id) {
     return;
   }
 
-  if (!confirm(`Excluir o aluno ${a.nome}?\n\nAs faturas em aberto dele serão apagadas do sistema. (Cobranças já emitidas no Asaas devem ser canceladas por lá, se existirem.)`)) return;
-  const { error } = await db.from('alunos').delete().eq('id', id);
-  toast(error ? 'Erro: ' + error.message : 'Aluno excluído ✓');
+  if (!confirm(`Excluir o aluno ${a.nome}?\n\nAs faturas em aberto dele serão CANCELADAS no Asaas (deixam de ser pagáveis) e removidas do sistema.`)) return;
+  toast('Cancelando cobranças e excluindo…');
+  const { data, error } = await db.functions.invoke('excluir-aluno', { body: { aluno_id: id } });
+  if (error || data?.erro) { toast('Erro ao excluir: ' + (data?.erro || error?.message)); return; }
+  toast(`Aluno excluído ✓ (${data.canceladas} cobrança(s) cancelada(s) no Asaas)`);
   carregarAlunos();
 }
 
