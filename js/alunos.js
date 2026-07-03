@@ -1,6 +1,6 @@
 /* ============================================================
    HEALFIT — MÓDULO ALUNOS (CRUD + fatura imediata + WhatsApp)
-   v1.3 — validação matemática de CPF no formulário
+   v1.4 — ⚡ reabre a fatura em aberto (reenviar WhatsApp / reimprimir) em vez de recusar
    ============================================================ */
 let ALUNOS = [];          // cache da lista atual
 let PLANOS = [];
@@ -197,6 +197,22 @@ async function gerarFaturaAluno(id) {
   if (!a) return;
   if (a.ativo === false) { toast('Aluno inativo — reative antes de gerar fatura.'); return; }
   if (!a.cpf) { toast('Cadastre o CPF do aluno antes de gerar a fatura (exigência do banco emissor).'); return; }
+
+  // Se já existe fatura em aberto (pendente/atrasada), REABRE o modal dela
+  // para reenviar no WhatsApp ou reimprimir — sem gerar duplicada.
+  const { data: aberta } = await db.from('mensalidades')
+    .select('*')
+    .eq('aluno_id', id)
+    .in('status', ['pendente', 'atrasado'])
+    .order('vencimento', { ascending: false })
+    .limit(1)
+    .maybeSingle();
+
+  if (aberta) {
+    mostrarFatura(a, aberta);
+    return;
+  }
+
   if (!confirm(`Gerar a fatura do mês para ${a.nome}?`)) return;
 
   toast('Gerando fatura no Asaas…');
@@ -220,8 +236,9 @@ async function gerarFaturaAluno(id) {
 /* ---------------- RESULTADO: PDF / PIX / WHATSAPP ---------------- */
 function mostrarFatura(aluno, m) {
   document.getElementById('mf-aluno').textContent = aluno.nome;
+  const statusTxt = m.status === 'atrasado' ? ' · EM ATRASO' : '';
   document.getElementById('mf-info').textContent =
-    `${brl(m.valor_total ?? (Number(m.valor_academia) + Number(m.valor_personal)))} · vencimento ${fmt(m.vencimento)}`;
+    `${brl(m.valor_total ?? (Number(m.valor_academia) + Number(m.valor_personal)))} · vencimento ${fmt(m.vencimento)}${statusTxt}`;
 
   const links = document.getElementById('mf-links');
   const zap = (aluno.whatsapp || '').replace(/\D/g, '');
