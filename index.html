@@ -6,7 +6,7 @@
 <title>HealFit — Gestão</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@75..125,400..900&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="css/style.css?v=5">
+<link rel="stylesheet" href="css/style.css?v=6">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
 <body>
@@ -65,7 +65,7 @@
     </div>
   </nav>
   <button class="btn-sair" onclick="sair()">⎋ <span>Sair</span></button>
-  <div class="side-foot">HealFit Gestão · v1.4<br>ambiente: sandbox</div>
+  <div class="side-foot">HealFit Gestão · v1.2<br>ambiente: sandbox</div>
 </aside>
 
 <main>
@@ -112,7 +112,36 @@
   </section>
 
   <!-- ============ MÓDULOS EM CONSTRUÇÃO ============ -->
-  <section class="view" id="v-personais"><div class="topbar"><h1>Personais</h1></div><div class="em-breve"><h2>🚧 Módulo em construção</h2>Próxima entrega da Fase 4.</div></section>
+  <!-- ============ PERSONAIS ============ -->
+  <section class="view" id="v-personais">
+    <div class="topbar">
+      <div><h1>Personais</h1><div class="sub">Terceirizados · repasse liberado somente sobre fatura paga</div></div>
+      <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center">
+        <div class="periodo">
+          <span class="lbl">Período</span>
+          <input type="date" id="pers-ini" onchange="carregarPersonais()">
+          <span>—</span>
+          <input type="date" id="pers-fim" onchange="carregarPersonais()">
+        </div>
+        <button class="btn btn-primary" onclick="abrirPersonal(null)">+ Novo personal</button>
+      </div>
+    </div>
+    <div class="pers-grid" id="pers-grid"></div>
+    <div class="card">
+      <div class="card-head"><h2>Detalhe do período — faturas com personal</h2><span class="badge b-info" id="pers-rep-total">—</span></div>
+      <table>
+        <thead><tr><th>Personal</th><th>Aluno</th><th>Valor do personal</th><th>Fatura</th><th>Repasse</th></tr></thead>
+        <tbody id="pers-rep-rows"><tr><td colspan="5" class="carregando">Carregando…</td></tr></tbody>
+      </table>
+    </div>
+    <div class="card">
+      <div class="card-head"><h2>Histórico de repasses pagos</h2></div>
+      <table>
+        <thead><tr><th>Personal</th><th>Período</th><th>Valor</th><th>Pago em</th><th>Obs.</th></tr></thead>
+        <tbody id="pers-hist-rows"><tr><td colspan="5" class="carregando">Carregando…</td></tr></tbody>
+      </table>
+    </div>
+  </section>
   <section class="view" id="v-financeiro"><div class="topbar"><h1>Financeiro</h1></div><div class="em-breve"><h2>🚧 Módulo em construção</h2>Próxima entrega da Fase 4.</div></section>
   <section class="view" id="v-despesas"><div class="topbar"><h1>Despesas</h1></div><div class="em-breve"><h2>🚧 Módulo em construção</h2>Próxima entrega da Fase 4.</div></section>
   <section class="view" id="v-socios"><div class="topbar"><h1>Participação</h1></div><div class="em-breve"><h2>🚧 Módulo em construção</h2>Próxima entrega da Fase 4.</div></section>
@@ -154,6 +183,24 @@
   </div>
 </div>
 
+<!-- ================= MODAL PERSONAL (novo/editar) ================= -->
+<div class="overlay" id="m-pers" onclick="if(event.target===this)closeModal('m-pers')">
+  <div class="modal">
+    <div class="modal-head"><div class="titulo" id="mp-title">Novo personal</div><button class="close" onclick="closeModal('m-pers')">✕</button></div>
+    <div class="form-grid">
+      <div class="full"><label>Nome completo *</label><input id="mp-nome" placeholder="Ex.: Rafael Lima"></div>
+      <div><label>CREF</label><input id="mp-cref" placeholder="000000-G/PR"></div>
+      <div><label>WhatsApp (com DDD)</label><input id="mp-zap" placeholder="44999990000"></div>
+      <div class="full"><label>Chave PIX para repasse</label><input id="mp-pix" placeholder="CPF, celular, e-mail ou aleatória"></div>
+      <div class="full"><label class="check-row"><input type="checkbox" id="mp-ativo" checked> Personal ativo</label></div>
+    </div>
+    <div class="modal-foot">
+      <div class="hint">O valor cobrado é definido individualmente no cadastro de cada aluno vinculado.</div>
+      <button class="btn btn-primary" onclick="salvarPersonal()">Salvar</button>
+    </div>
+  </div>
+</div>
+
 <!-- ================= MODAL FATURA GERADA ================= -->
 <div class="overlay" id="m-fatura-ok" onclick="if(event.target===this)closeModal('m-fatura-ok')">
   <div class="modal">
@@ -175,9 +222,10 @@
 <div class="toast" id="toast"><div class="dot"></div><span id="toast-msg">ok</span></div>
 
 <!-- ================= SCRIPTS (ordem importa) ================= -->
-<script src="js/config.js?v=5"></script>
-<script src="js/app.js?v=5"></script>
-<script src="js/dashboard.js?v=5"></script>
-<script src="js/alunos.js?v=5"></script>
+<script src="js/config.js?v=6"></script>
+<script src="js/app.js?v=6"></script>
+<script src="js/dashboard.js?v=6"></script>
+<script src="js/alunos.js?v=6"></script>
+<script src="js/personais.js?v=6"></script>
 </body>
 </html>
