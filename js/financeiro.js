@@ -1,7 +1,6 @@
 /* ============================================================
    HEALFIT — MÓDULO FINANCEIRO
-   v1.0 — período + status + busca, reabrir fatura, editar
-   vencimento, baixa manual (cancela no Asaas) e cancelamento
+   v1.1 — recibo usa o valor efetivamente pago (tabela pagamentos)
    ============================================================ */
 let FIN_LIST = [];
 let finFiltro = 'todos';
@@ -203,9 +202,21 @@ async function finRecibo(id) {
   const { data: aluno } = await db.from('alunos').select('nome, whatsapp').eq('id', m.aluno_id).single();
   const zap = (aluno?.whatsapp || '').replace(/\D/g, '');
   if (!zap) { toast('Aluno sem WhatsApp cadastrado.'); return; }
+
+  // Valor EFETIVAMENTE recebido: busca o pagamento registrado (baixa manual
+  // pode ter valor diferente da fatura). Fallback: valor total da fatura.
+  const { data: pg } = await db.from('pagamentos')
+    .select('valor, pago_em')
+    .eq('mensalidade_id', m.id)
+    .order('pago_em', { ascending: false })
+    .limit(1)
+    .maybeSingle();
+  const valorRecebido = Number(pg?.valor ?? m.valor_total);
+  const dataPagto = pg?.pago_em ?? m.pago_em;
+
   const comp = String(m.competencia).slice(0, 7).split('-').reverse().join('/');
   const msg = encodeURIComponent(
-    `Olá ${m.aluno.split(' ')[0]}! ✅ Confirmamos o recebimento de ${brl(m.valor_total)} referente à sua mensalidade ${comp} da HealFit Academia.\n\nPagamento em ${fmt(String(m.pago_em).slice(0, 10))}. Obrigado e bons treinos! 💪`
+    `Olá ${m.aluno.split(' ')[0]}! ✅ Confirmamos o recebimento de ${brl(valorRecebido)} referente à sua mensalidade ${comp} da HealFit Academia.\n\nPagamento em ${fmt(String(dataPagto).slice(0, 10))}. Obrigado e bons treinos! 💪`
   );
   window.open(`https://wa.me/55${zap}?text=${msg}`, '_blank');
 }
