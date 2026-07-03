@@ -1,6 +1,6 @@
 /* ============================================================
    HEALFIT — MÓDULO PERSONAIS
-   v1.0 — CRUD + repasses devidos por período + histórico
+   v1.1 — personal com histórico de repasses/faturas é inativado, não excluído
    ============================================================ */
 let PERS_LIST = [];
 let persEditId = null;
@@ -185,20 +185,37 @@ async function salvarPersonal() {
   carregarPersonais();
 }
 
-/* ---------------- EXCLUIR ---------------- */
+/* ---------------- EXCLUIR / INATIVAR ---------------- */
 async function excluirPersonal(id) {
   const p = PERS_LIST.find(x => x.id === id);
   if (!p) return;
 
-  const { count } = await db.from('alunos')
+  // 1) Bloqueia se tem aluno ativo vinculado
+  const { count: alunosVinc } = await db.from('alunos')
     .select('id', { count: 'exact', head: true })
     .eq('personal_id', id).eq('ativo', true);
 
-  if (count > 0) {
-    alert(`${p.nome} tem ${count} aluno(s) ativo(s) vinculado(s).\n\nDesvincule os alunos antes de excluir — assim as próximas faturas deles saem sem o valor do personal.\n\n(O histórico de faturas antigas é preservado.)`);
+  if (alunosVinc > 0) {
+    alert(`${p.nome} tem ${alunosVinc} aluno(s) ativo(s) vinculado(s).\n\nDesvincule os alunos antes de excluir — assim as próximas faturas deles saem sem o valor do personal.`);
     return;
   }
-  if (!confirm(`Excluir o personal ${p.nome}?\n\nO histórico de repasses e faturas antigas é preservado.`)) return;
+
+  // 2) Se tem histórico financeiro (repasses pagos), INATIVA em vez de excluir
+  const { count: temRepasses } = await db.from('repasses')
+    .select('id', { count: 'exact', head: true })
+    .eq('personal_id', id);
+
+  if (temRepasses > 0) {
+    if (confirm(`${p.nome} tem ${temRepasses} repasse(s) no histórico financeiro.\n\nExcluir apagaria esse histórico — por segurança, o sistema INATIVA o personal (some das listas, histórico preservado).\n\nOK = Inativar | Cancelar = não fazer nada`)) {
+      const { error } = await db.from('personais').update({ ativo: false }).eq('id', id);
+      toast(error ? 'Erro: ' + error.message : 'Personal inativado ✓ — histórico preservado.');
+      carregarPersonais();
+    }
+    return;
+  }
+
+  // 3) Sem vínculos e sem histórico: exclusão real
+  if (!confirm(`Excluir o personal ${p.nome}?`)) return;
   const { error } = await db.from('personais').delete().eq('id', id);
   toast(error ? 'Erro: ' + error.message : 'Personal excluído ✓');
   carregarPersonais();
