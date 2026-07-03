@@ -87,6 +87,7 @@ function go(v, el) {
   // cada módulo carrega seus dados ao abrir
   if (v === 'dashboard' && typeof carregarDashboard === 'function') carregarDashboard();
   if (v === 'alunos'    && typeof carregarAlunos    === 'function') carregarAlunos();
+  if (v === 'personais' && typeof carregarPersonais === 'function') carregarPersonais();
 }
 
 boot();
