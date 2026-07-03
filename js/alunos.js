@@ -1,6 +1,6 @@
 /* ============================================================
    HEALFIT — MÓDULO ALUNOS (CRUD + fatura imediata + WhatsApp)
-   v1.2 — exclusão cancela cobranças abertas no Asaas (via Edge Function)
+   v1.3 — validação matemática de CPF no formulário
    ============================================================ */
 let ALUNOS = [];          // cache da lista atual
 let PLANOS = [];
@@ -127,6 +127,9 @@ async function salvarAluno() {
   const cpf = document.getElementById('ma-cpf').value.trim();
   if (!cpf) {
     if (!confirm('Aluno sem CPF: não será possível gerar cobranças para ele até cadastrar o CPF (exigência do emissor).\n\nSalvar mesmo assim?')) return;
+  } else if (!validarCPF(cpf)) {
+    toast('CPF inválido — confira os números digitados.');
+    return;
   }
 
   const pid = document.getElementById('ma-pid').value;
@@ -237,4 +240,19 @@ function mostrarFatura(aluno, m) {
       <div class="linha-copiavel" onclick="navigator.clipboard.writeText(this.textContent).then(()=>toast('PIX copiado ✓'))">${esc(m.pix_copia_cola)}</div>` : ''}
   `;
   openModal('m-fatura-ok');
+}
+
+
+/* ---------------- VALIDAÇÃO DE CPF ---------------- */
+function validarCPF(cpf) {
+  cpf = String(cpf).replace(/\D/g, '');
+  if (cpf.length !== 11 || /^(\d)\1{10}$/.test(cpf)) return false;
+  let s = 0;
+  for (let i = 0; i < 9; i++) s += Number(cpf[i]) * (10 - i);
+  let d1 = 11 - (s % 11); if (d1 >= 10) d1 = 0;
+  if (d1 !== Number(cpf[9])) return false;
+  s = 0;
+  for (let i = 0; i < 10; i++) s += Number(cpf[i]) * (11 - i);
+  let d2 = 11 - (s % 11); if (d2 >= 10) d2 = 0;
+  return d2 === Number(cpf[10]);
 }
