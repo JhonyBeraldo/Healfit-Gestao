@@ -1,5 +1,6 @@
 /* ============================================================
    HEALFIT — MÓDULO ALUNOS (CRUD + fatura imediata + WhatsApp)
+   v1.1 — CPF obrigatório para gerar fatura (exigência Asaas)
    ============================================================ */
 let ALUNOS = [];          // cache da lista atual
 let PLANOS = [];
@@ -123,10 +124,15 @@ async function salvarAluno() {
   const nome = document.getElementById('ma-nome').value.trim();
   if (!nome) { toast('Informe o nome do aluno.'); return; }
 
+  const cpf = document.getElementById('ma-cpf').value.trim();
+  if (!cpf) {
+    if (!confirm('Aluno sem CPF: não será possível gerar cobranças para ele até cadastrar o CPF (exigência do emissor).\n\nSalvar mesmo assim?')) return;
+  }
+
   const pid = document.getElementById('ma-pid').value;
   const registro = {
     nome,
-    cpf: document.getElementById('ma-cpf').value.trim() || null,
+    cpf: cpf || null,
     whatsapp: document.getElementById('ma-zap').value.trim() || null,
     email: document.getElementById('ma-email').value.trim() || null,
     plano_id: Number(document.getElementById('ma-plano').value),
@@ -185,6 +191,7 @@ async function gerarFaturaAluno(id) {
   const a = ALUNOS.find(x => x.id === id);
   if (!a) return;
   if (a.ativo === false) { toast('Aluno inativo — reative antes de gerar fatura.'); return; }
+  if (!a.cpf) { toast('Cadastre o CPF do aluno antes de gerar a fatura (exigência do banco emissor).'); return; }
   if (!confirm(`Gerar a fatura do mês para ${a.nome}?`)) return;
 
   toast('Gerando fatura no Asaas…');
