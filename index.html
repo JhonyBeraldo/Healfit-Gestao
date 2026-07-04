@@ -6,7 +6,7 @@
 <title>HealFit — Gestão</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@75..125,400..900&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="css/style.css?v=10">
+<link rel="stylesheet" href="css/style.css?v=11">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
 <body>
@@ -65,7 +65,7 @@
     </div>
   </nav>
   <button class="btn-sair" onclick="sair()">⎋ <span>Sair</span></button>
-  <div class="side-foot">HealFit Gestão · v1.9<br>ambiente: sandbox</div>
+  <div class="side-foot">HealFit Gestão · v2.0<br>ambiente: sandbox</div>
 </aside>
 
 <main>
@@ -174,7 +174,38 @@
       </table>
     </div>
   </section>
-  <section class="view" id="v-despesas"><div class="topbar"><h1>Despesas</h1></div><div class="em-breve"><h2>🚧 Módulo em construção</h2>Próxima entrega da Fase 4.</div></section>
+  <!-- ============ DESPESAS ============ -->
+  <section class="view" id="v-despesas">
+    <div class="topbar">
+      <div><h1>Despesas</h1><div class="sub">Custos fixos e variáveis · recorrentes são replicadas todo dia 1º</div></div>
+      <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center">
+        <div class="periodo">
+          <span class="lbl">Período</span>
+          <input type="date" id="desp-ini" onchange="carregarDespesas()">
+          <span>—</span>
+          <input type="date" id="desp-fim" onchange="carregarDespesas()">
+        </div>
+        <button class="btn btn-primary" onclick="abrirDespesa(null)">+ Nova despesa</button>
+      </div>
+    </div>
+    <div class="kpis" style="grid-template-columns:repeat(3,1fr)">
+      <div class="kpi red"><div class="label">Total no período</div><div class="value" id="dk-total">—</div><div class="delta" id="dk-qtd">—</div></div>
+      <div class="kpi amber"><div class="label">A pagar</div><div class="value" id="dk-apagar">—</div><div class="delta">no período selecionado</div></div>
+      <div class="kpi dark"><div class="label">Resultado do período</div><div class="value" id="dk-resultado">—</div><div class="delta">receita academia − despesas (informativo)</div></div>
+    </div>
+    <div class="card">
+      <div class="filters">
+        <div class="chip active" onclick="filtraDesp('todas',this)">Todas</div>
+        <div class="chip" onclick="filtraDesp('apagar',this)">A pagar</div>
+        <div class="chip" onclick="filtraDesp('pagas',this)">Pagas</div>
+        <div class="chip" onclick="filtraDesp('recorrentes',this)">Recorrentes</div>
+      </div>
+      <table>
+        <thead><tr><th>Descrição</th><th>Categoria</th><th>Vencimento</th><th>Valor</th><th>Status</th><th style="text-align:right">Ações</th></tr></thead>
+        <tbody id="desp-rows"><tr><td colspan="6" class="carregando">Carregando…</td></tr></tbody>
+      </table>
+    </div>
+  </section>
   <section class="view" id="v-socios"><div class="topbar"><h1>Participação</h1></div><div class="em-breve"><h2>🚧 Módulo em construção</h2>Próxima entrega da Fase 4.</div></section>
   <section class="view" id="v-config"><div class="topbar"><h1>Configurações</h1></div><div class="em-breve"><h2>🚧 Módulo em construção</h2>Próxima entrega da Fase 4.</div></section>
 </main>
@@ -266,6 +297,32 @@
   </div>
 </div>
 
+<!-- ================= MODAL DESPESA (nova/editar) ================= -->
+<div class="overlay" id="m-despesa" onclick="if(event.target===this)closeModal('m-despesa')">
+  <div class="modal">
+    <div class="modal-head"><div class="titulo" id="md-title">Nova despesa</div><button class="close" onclick="closeModal('m-despesa')">✕</button></div>
+    <div class="form-grid">
+      <div class="full"><label>Descrição *</label><input id="md-desc" placeholder="Ex.: Energia elétrica (Copel)"></div>
+      <div><label>Categoria</label>
+        <select id="md-cat">
+          <option>Fixa</option><option>Variável</option><option>Manutenção</option>
+          <option>Pessoal / CLT</option><option>Impostos</option><option>Outros</option>
+        </select>
+      </div>
+      <div><label>Valor (R$) *</label><input type="number" id="md-valor" min="0" step="0.01" placeholder="0,00"></div>
+      <div><label>Vencimento *</label><input type="date" id="md-venc"></div>
+      <div style="display:flex;align-items:end;padding-bottom:4px">
+        <label class="check-row"><input type="checkbox" id="md-rec"> Repete todo mês (recorrente)</label>
+      </div>
+    </div>
+    <div class="form-note">Despesas recorrentes são lançadas automaticamente no mesmo dia de cada mês seguinte.</div>
+    <div class="modal-foot">
+      <div class="hint">O valor pode ser ajustado a cada mês editando o lançamento daquele mês.</div>
+      <button class="btn btn-primary" onclick="salvarDespesa()">Salvar</button>
+    </div>
+  </div>
+</div>
+
 <!-- ================= MODAL FATURA GERADA ================= -->
 <div class="overlay" id="m-fatura-ok" onclick="if(event.target===this)closeModal('m-fatura-ok')">
   <div class="modal">
@@ -287,11 +344,12 @@
 <div class="toast" id="toast"><div class="dot"></div><span id="toast-msg">ok</span></div>
 
 <!-- ================= SCRIPTS (ordem importa) ================= -->
-<script src="js/config.js?v=10"></script>
-<script src="js/app.js?v=10"></script>
-<script src="js/dashboard.js?v=10"></script>
-<script src="js/alunos.js?v=10"></script>
-<script src="js/personais.js?v=10"></script>
-<script src="js/financeiro.js?v=10"></script>
+<script src="js/config.js?v=11"></script>
+<script src="js/app.js?v=11"></script>
+<script src="js/dashboard.js?v=11"></script>
+<script src="js/alunos.js?v=11"></script>
+<script src="js/personais.js?v=11"></script>
+<script src="js/financeiro.js?v=11"></script>
+<script src="js/despesas.js?v=11"></script>
 </body>
 </html>
