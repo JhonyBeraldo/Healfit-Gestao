@@ -1,6 +1,6 @@
 /* ============================================================
    HEALFIT — MÓDULO FINANCEIRO
-   v1.1 — recibo usa o valor efetivamente pago (tabela pagamentos)
+   v1.2 — mensagens WhatsApp em formato seguro (sem emojis que quebram encoding)
    ============================================================ */
 let FIN_LIST = [];
 let finFiltro = 'todos';
@@ -216,7 +216,11 @@ async function finRecibo(id) {
 
   const comp = String(m.competencia).slice(0, 7).split('-').reverse().join('/');
   const msg = encodeURIComponent(
-    `Olá ${m.aluno.split(' ')[0]}! ✅ Confirmamos o recebimento de ${brl(valorRecebido)} referente à sua mensalidade ${comp} da HealFit Academia.\n\nPagamento em ${fmt(String(dataPagto).slice(0, 10))}. Obrigado e bons treinos! 💪`
+    `*HEALFIT ACADEMIA - RECIBO*\n\n` +
+    `Olá, ${m.aluno.split(' ')[0]}!\n` +
+    `Confirmamos o recebimento de *${brl(valorRecebido)}* referente à mensalidade ${comp}.\n` +
+    `Data do pagamento: ${fmt(String(dataPagto).slice(0, 10))}\n\n` +
+    `Obrigado e bons treinos!`
   );
   window.open(`https://wa.me/55${zap}?text=${msg}`, '_blank');
 }
