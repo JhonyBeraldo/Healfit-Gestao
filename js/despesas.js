@@ -1,6 +1,6 @@
 /* ============================================================
    HEALFIT — MÓDULO DESPESAS
-   v1.0 — CRUD + categorias + recorrência mensal + baixa + período
+   v1.1 — Resultado usa o valor EFETIVAMENTE recebido (tabela pagamentos)
    ============================================================ */
 let DESP_LIST = [];
 let despFiltro = 'todas';
@@ -26,12 +26,13 @@ async function carregarDespesas() {
   tb.innerHTML = '<tr><td colspan="6" class="carregando">Carregando…</td></tr>';
 
   // despesas do período + receita da academia no mesmo período (para o Resultado)
+  // Receita usa PAGAMENTOS (valor que entrou de fato — baixas parciais contam
+  // pelo valor recebido), descontando a parte do personal da fatura.
   const [{ data: despesas, error }, { data: pagos }] = await Promise.all([
     db.from('despesas').select('*')
       .gte('vencimento', pIni).lte('vencimento', pFim)
       .order('vencimento', { ascending: true }),
-    db.from('mensalidades').select('valor_total, valor_personal')
-      .eq('status', 'pago')
+    db.from('pagamentos').select('valor, mensalidades(valor_personal)')
       .gte('pago_em', pIni + 'T00:00:00')
       .lte('pago_em', pFim + 'T23:59:59'),
   ]);
@@ -39,7 +40,8 @@ async function carregarDespesas() {
   if (error) { tb.innerHTML = `<tr><td colspan="6" class="vazio">Erro: ${esc(error.message)}</td></tr>`; return; }
   DESP_LIST = despesas || [];
 
-  const receitaAcademia = (pagos || []).reduce((s, m) => s + Number(m.valor_total) - Number(m.valor_personal), 0);
+  const receitaAcademia = (pagos || []).reduce(
+    (s, p) => s + Number(p.valor) - Number(p.mensalidades?.valor_personal || 0), 0);
   renderDespesas(receitaAcademia);
 }
 
