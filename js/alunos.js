@@ -1,6 +1,6 @@
 /* ============================================================
    HEALFIT — MÓDULO ALUNOS (CRUD + fatura imediata + WhatsApp)
-   v1.4 — ⚡ reabre a fatura em aberto (reenviar WhatsApp / reimprimir) em vez de recusar
+   v1.5 — mensagens WhatsApp em formato seguro; negrito nativo do WhatsApp (*texto*)
    ============================================================ */
 let ALUNOS = [];          // cache da lista atual
 let PLANOS = [];
@@ -243,10 +243,13 @@ function mostrarFatura(aluno, m) {
   const links = document.getElementById('mf-links');
   const zap = (aluno.whatsapp || '').replace(/\D/g, '');
   const msg = encodeURIComponent(
-    `Olá ${aluno.nome.split(' ')[0]}! 💪 Sua fatura HealFit já está disponível:\n\n` +
-    `💰 Valor: ${brl(m.valor_total ?? (Number(m.valor_academia) + Number(m.valor_personal)))}\n` +
-    `📅 Vencimento: ${fmt(m.vencimento)}\n\n` +
-    `Pague por boleto ou PIX no link:\n${m.url_fatura}\n\nQualquer dúvida é só chamar!`
+    `*HEALFIT ACADEMIA - FATURA*\n\n` +
+    `Olá, ${aluno.nome.split(' ')[0]}!\n` +
+    `Sua fatura já está disponível:\n\n` +
+    `Valor: *${brl(m.valor_total ?? (Number(m.valor_academia) + Number(m.valor_personal)))}*\n` +
+    `Vencimento: ${fmt(m.vencimento)}\n\n` +
+    `Pague por boleto ou PIX no link:\n${m.url_fatura}\n\n` +
+    `Qualquer dúvida é só chamar!`
   );
 
   links.innerHTML = `
