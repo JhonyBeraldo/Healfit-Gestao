@@ -90,6 +90,7 @@ function go(v, el) {
   if (v === 'personais' && typeof carregarPersonais === 'function') carregarPersonais();
   if (v === 'financeiro' && typeof carregarFinanceiro === 'function') carregarFinanceiro();
   if (v === 'despesas'   && typeof carregarDespesas   === 'function') carregarDespesas();
+  if (v === 'socios'     && typeof carregarSocios     === 'function') carregarSocios();
 }
 
 boot();
