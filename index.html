@@ -6,7 +6,7 @@
 <title>HealFit — Gestão</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@75..125,400..900&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="css/style.css?v=13">
+<link rel="stylesheet" href="css/style.css?v=14">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
 <body>
@@ -65,7 +65,7 @@
     </div>
   </nav>
   <button class="btn-sair" onclick="sair()">⎋ <span>Sair</span></button>
-  <div class="side-foot">HealFit Gestão · v2.2<br>ambiente: sandbox</div>
+  <div class="side-foot">HealFit Gestão · v2.3<br>ambiente: sandbox</div>
 </aside>
 
 <main>
@@ -206,7 +206,50 @@
       </table>
     </div>
   </section>
-  <section class="view" id="v-socios"><div class="topbar"><h1>Participação</h1></div><div class="em-breve"><h2>🚧 Módulo em construção</h2>Próxima entrega da Fase 4.</div></section>
+  <!-- ============ PARTICIPAÇÃO ============ -->
+  <section class="view" id="v-socios">
+    <div class="topbar">
+      <div><h1>Participação dos sócios</h1><div class="sub">Base = valor que entrou de alunos (parte da academia, sem os personais)</div></div>
+      <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center">
+        <div class="periodo">
+          <span class="lbl">Período</span>
+          <input type="date" id="soc-ini" onchange="carregarSocios()">
+          <span>—</span>
+          <input type="date" id="soc-fim" onchange="carregarSocios()">
+        </div>
+        <button class="btn btn-volt" onclick="fecharPeriodo()">🔒 Fechar período</button>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-head"><h2>Base de cálculo</h2><span class="badge b-info" id="soc-periodo-lbl">—</span></div>
+      <div id="soc-erro" style="color:var(--late);padding:0 20px;font-size:13px"></div>
+      <div class="calc-box">
+        <div class="row"><span class="lbl">(+) Recebido dos alunos no período (valor que entrou)</span><span id="c-bruto">—</span></div>
+        <div class="row neg"><span class="lbl">(−) Parte dos personais (repasse, não entra na divisão)</span><span id="c-repasse">—</span></div>
+        <div class="row total"><span>Base para distribuição (parte da academia)</span><span id="c-base">—</span></div>
+      </div>
+      <div class="info-box">ℹ️ Despesas do período: <b id="c-despesas" style="color:var(--ink)">—</b> — apenas informativo, <b>não</b> é descontado da base dos sócios.</div>
+      <div class="socio-bar" id="soc-bar"></div>
+      <div class="socio-legend" id="soc-legend"></div>
+    </div>
+
+    <div class="card">
+      <div class="card-head"><h2>Distribuição por sócio</h2><button class="btn btn-ghost btn-sm" onclick="abrirSocios()">✎ Editar percentuais</button></div>
+      <table>
+        <thead><tr><th>Sócio</th><th>Percentual</th><th>Valor no período</th></tr></thead>
+        <tbody id="soc-rows"><tr><td colspan="3" class="carregando">Carregando…</td></tr></tbody>
+      </table>
+    </div>
+
+    <div class="card">
+      <div class="card-head"><h2>Fechamentos (consulta permanente)</h2></div>
+      <table>
+        <thead><tr><th>Período</th><th>Bruto recebido</th><th>Base distribuída</th><th>Distribuição</th><th>Status</th></tr></thead>
+        <tbody id="fech-rows"><tr><td colspan="5" class="carregando">Carregando…</td></tr></tbody>
+      </table>
+    </div>
+  </section>
   <section class="view" id="v-config"><div class="topbar"><h1>Configurações</h1></div><div class="em-breve"><h2>🚧 Módulo em construção</h2>Próxima entrega da Fase 4.</div></section>
 </main>
 </div>
@@ -323,6 +366,19 @@
   </div>
 </div>
 
+<!-- ================= MODAL PERCENTUAIS ================= -->
+<div class="overlay" id="m-socios" onclick="if(event.target===this)closeModal('m-socios')">
+  <div class="modal">
+    <div class="modal-head"><div class="titulo">Percentuais dos sócios</div><button class="close" onclick="closeModal('m-socios')">✕</button></div>
+    <div class="form-grid" id="ms-grid"></div>
+    <div class="form-note" id="ms-nota">A soma deve fechar em 100%.</div>
+    <div class="modal-foot">
+      <div class="hint">Fechamentos já gravados não mudam — os novos percentuais valem para os próximos cálculos.</div>
+      <button class="btn btn-primary" onclick="salvarSocios()">Salvar percentuais</button>
+    </div>
+  </div>
+</div>
+
 <!-- ================= MODAL FATURA GERADA ================= -->
 <div class="overlay" id="m-fatura-ok" onclick="if(event.target===this)closeModal('m-fatura-ok')">
   <div class="modal">
@@ -344,12 +400,13 @@
 <div class="toast" id="toast"><div class="dot"></div><span id="toast-msg">ok</span></div>
 
 <!-- ================= SCRIPTS (ordem importa) ================= -->
-<script src="js/config.js?v=13"></script>
-<script src="js/app.js?v=13"></script>
-<script src="js/dashboard.js?v=13"></script>
-<script src="js/alunos.js?v=13"></script>
-<script src="js/personais.js?v=13"></script>
-<script src="js/financeiro.js?v=13"></script>
-<script src="js/despesas.js?v=13"></script>
+<script src="js/config.js?v=14"></script>
+<script src="js/app.js?v=14"></script>
+<script src="js/dashboard.js?v=14"></script>
+<script src="js/alunos.js?v=14"></script>
+<script src="js/personais.js?v=14"></script>
+<script src="js/financeiro.js?v=14"></script>
+<script src="js/despesas.js?v=14"></script>
+<script src="js/socios.js?v=14"></script>
 </body>
 </html>
