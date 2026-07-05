@@ -6,16 +6,16 @@ async function carregarDashboard() {
   const iniMes = `${hoje.getFullYear()}-${String(hoje.getMonth() + 1).padStart(2, '0')}-01`;
   const fimMes = new Date(hoje.getFullYear(), hoje.getMonth() + 1, 0).toISOString().slice(0, 10);
 
-  // KPIs: pagos no mês corrente (por data de pagamento)
-  const { data: pagos, error: e1 } = await db.from('mensalidades')
-    .select('valor_total, valor_personal')
-    .eq('status', 'pago')
+  // KPIs: valor EFETIVAMENTE recebido no mês (tabela pagamentos — baixas
+  // parciais contam pelo valor real que entrou), com o personal da fatura.
+  const { data: pagos, error: e1 } = await db.from('pagamentos')
+    .select('valor, mensalidades(valor_personal)')
     .gte('pago_em', iniMes + 'T00:00:00')
     .lte('pago_em', fimMes + 'T23:59:59');
 
   if (!e1) {
-    const bruto = (pagos || []).reduce((s, m) => s + Number(m.valor_total), 0);
-    const repasse = (pagos || []).reduce((s, m) => s + Number(m.valor_personal), 0);
+    const bruto = (pagos || []).reduce((s, p) => s + Number(p.valor), 0);
+    const repasse = (pagos || []).reduce((s, p) => s + Number(p.mensalidades?.valor_personal || 0), 0);
     document.getElementById('k-bruto').textContent = brl(bruto);
     document.getElementById('k-academia').textContent = brl(bruto - repasse);
     document.getElementById('k-repasse').textContent = brl(repasse);
