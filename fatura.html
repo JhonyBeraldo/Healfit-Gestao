@@ -278,7 +278,10 @@ async function carregar(){
   if (f.linha_digitavel) {
     document.getElementById('f-linha').textContent = f.linha_digitavel;
     const pdf = document.getElementById('f-pdf');
-    if (f.url_fatura) pdf.href = f.url_fatura; else pdf.style.display='none';
+    // PDF DIRETO do boleto (sem página de pagamento do Asaas — respeita o
+    // controle de cartão). Fallback: página do Asaas só se o PDF não existir.
+    const urlPdf = f.url_boleto || f.url_fatura;
+    if (urlPdf) pdf.href = urlPdf; else pdf.style.display='none';
   } else {
     document.getElementById('met-boleto').style.display='none';
   }
