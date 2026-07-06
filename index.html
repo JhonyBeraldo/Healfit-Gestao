@@ -6,7 +6,7 @@
 <title>HealFit — Gestão</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@75..125,400..900&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="css/style.css?v=14">
+<link rel="stylesheet" href="css/style.css?v=15">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
 <body>
@@ -65,7 +65,7 @@
     </div>
   </nav>
   <button class="btn-sair" onclick="sair()">⎋ <span>Sair</span></button>
-  <div class="side-foot">HealFit Gestão · v2.3<br>ambiente: sandbox</div>
+  <div class="side-foot">HealFit Gestão · v2.4<br>ambiente: sandbox</div>
 </aside>
 
 <main>
@@ -250,7 +250,44 @@
       </table>
     </div>
   </section>
-  <section class="view" id="v-config"><div class="topbar"><h1>Configurações</h1></div><div class="em-breve"><h2>🚧 Módulo em construção</h2>Próxima entrega da Fase 4.</div></section>
+  <!-- ============ CONFIGURAÇÕES ============ -->
+  <section class="view" id="v-config">
+    <div class="topbar">
+      <div><h1>Configurações</h1><div class="sub">Planos, geração automática e integração</div></div>
+    </div>
+
+    <div class="card">
+      <div class="card-head"><h2>Planos</h2><button class="btn btn-primary btn-sm" onclick="abrirPlano(null)">+ Novo plano</button></div>
+      <table>
+        <thead><tr><th>Plano</th><th>Valor</th><th>Periodicidade</th><th>Alunos ativos</th><th style="text-align:right">Ações</th></tr></thead>
+        <tbody id="planos-rows"><tr><td colspan="5" class="carregando">Carregando…</td></tr></tbody>
+      </table>
+    </div>
+
+    <div class="card">
+      <div class="card-head"><h2>Geração automática de faturas</h2></div>
+      <div style="padding:18px 20px;display:flex;flex-direction:column;gap:16px">
+        <label class="check-row" style="font-size:14px">
+          <input type="checkbox" id="cfg-pausa" onchange="salvarPausa()">
+          <span id="cfg-pausa-lbl">—</span>
+        </label>
+        <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;font-size:14px">
+          Gerar a fatura de cada aluno
+          <input type="number" id="cfg-dias" min="1" max="30" style="width:70px;padding:8px 10px;border:1.5px solid var(--line);border-radius:8px;font-family:'Inter'">
+          dia(s) antes do vencimento
+          <button class="btn btn-ghost btn-sm" onclick="salvarDias()">Salvar</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-head"><h2>Integração de pagamento</h2><span class="badge b-warn">Sandbox (testes)</span></div>
+      <div style="padding:18px 20px;font-size:14px;color:var(--muted);line-height:1.7">
+        Provedor: <b style="color:var(--ink)">Asaas — ambiente Sandbox</b> · Webhook ativo com baixa automática · Boleto híbrido (código de barras + QR PIX) · Cartão controlado por aluno.<br>
+        A virada para produção (Fase 6) troca as chaves nos secrets do Supabase e o <code>config.js</code> — sem alterar código.
+      </div>
+    </div>
+  </section>
 </main>
 </div>
 
@@ -379,6 +416,31 @@
   </div>
 </div>
 
+<!-- ================= MODAL PLANO (novo/editar) ================= -->
+<div class="overlay" id="m-plano" onclick="if(event.target===this)closeModal('m-plano')">
+  <div class="modal">
+    <div class="modal-head"><div class="titulo" id="mpl-title">Novo plano</div><button class="close" onclick="closeModal('m-plano')">✕</button></div>
+    <div class="form-grid">
+      <div class="full"><label>Nome do plano *</label><input id="mpl-nome" placeholder="Ex.: Mensal"></div>
+      <div><label>Valor (R$) *</label><input type="number" id="mpl-valor" min="0" step="0.01" placeholder="120,00"></div>
+      <div><label>Periodicidade</label>
+        <select id="mpl-per">
+          <option value="1">Mensal</option>
+          <option value="3">Trimestral</option>
+          <option value="6">Semestral</option>
+          <option value="12">Anual</option>
+        </select>
+      </div>
+      <div class="full"><label class="check-row"><input type="checkbox" id="mpl-ativo" checked> Plano ativo (aparece no cadastro de alunos)</label></div>
+    </div>
+    <div class="form-note">Alterar o valor de um plano NÃO muda faturas já emitidas — vale para as próximas gerações.</div>
+    <div class="modal-foot">
+      <div class="hint">Plano com alunos vinculados não pode ser excluído — inative-o.</div>
+      <button class="btn btn-primary" onclick="salvarPlano()">Salvar</button>
+    </div>
+  </div>
+</div>
+
 <!-- ================= MODAL FATURA GERADA ================= -->
 <div class="overlay" id="m-fatura-ok" onclick="if(event.target===this)closeModal('m-fatura-ok')">
   <div class="modal">
@@ -400,13 +462,14 @@
 <div class="toast" id="toast"><div class="dot"></div><span id="toast-msg">ok</span></div>
 
 <!-- ================= SCRIPTS (ordem importa) ================= -->
-<script src="js/config.js?v=14"></script>
-<script src="js/app.js?v=14"></script>
-<script src="js/dashboard.js?v=14"></script>
-<script src="js/alunos.js?v=14"></script>
-<script src="js/personais.js?v=14"></script>
-<script src="js/financeiro.js?v=14"></script>
-<script src="js/despesas.js?v=14"></script>
-<script src="js/socios.js?v=14"></script>
+<script src="js/config.js?v=15"></script>
+<script src="js/app.js?v=15"></script>
+<script src="js/dashboard.js?v=15"></script>
+<script src="js/alunos.js?v=15"></script>
+<script src="js/personais.js?v=15"></script>
+<script src="js/financeiro.js?v=15"></script>
+<script src="js/despesas.js?v=15"></script>
+<script src="js/socios.js?v=15"></script>
+<script src="js/config-view.js?v=15"></script>
 </body>
 </html>
