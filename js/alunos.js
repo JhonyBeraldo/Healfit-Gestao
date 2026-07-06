@@ -1,6 +1,6 @@
 /* ============================================================
    HEALFIT — MÓDULO ALUNOS (CRUD + fatura imediata + WhatsApp)
-   v1.6 — link da fatura aponta para a página HealFit (fatura.html?t=token)
+   v1.7 — botão de PDF usa o boleto direto (bankSlipUrl), sem expor a página de pagamento do Asaas
    ============================================================ */
 let ALUNOS = [];          // cache da lista atual
 let PLANOS = [];
@@ -260,7 +260,7 @@ function mostrarFatura(aluno, m) {
     ${linkPagina ? `<a class="btn btn-primary" href="${linkPagina}" target="_blank">🔗 Abrir página da fatura (HealFit)</a>` : ''}
     ${zap ? `<a class="btn btn-volt" href="https://wa.me/55${zap}?text=${msg}" target="_blank">💬 Enviar no WhatsApp do aluno</a>`
           : '<div class="hint">Aluno sem WhatsApp cadastrado — edite o cadastro para habilitar o envio.</div>'}
-    ${m.url_fatura ? `<a class="btn btn-ghost" href="${m.url_fatura}" target="_blank">📄 PDF do boleto (Asaas)</a>` : ''}
+    ${(m.url_boleto || m.url_fatura) ? `<a class="btn btn-ghost" href="${m.url_boleto || m.url_fatura}" target="_blank">📄 PDF do boleto</a>` : ''}
     ${m.pix_copia_cola ? `<div class="hint" style="max-width:none">PIX copia-e-cola (clique para copiar):</div>
       <div class="linha-copiavel" onclick="navigator.clipboard.writeText(this.textContent).then(()=>toast('PIX copiado ✓'))">${esc(m.pix_copia_cola)}</div>` : ''}
   `;
