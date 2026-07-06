@@ -1,6 +1,6 @@
 /* ============================================================
    HEALFIT — MÓDULO FINANCEIRO
-   v1.2 — mensagens WhatsApp em formato seguro (sem emojis que quebram encoding)
+   v1.3 — faturas pagas ganham botão 🔗 para o comprovante; recibo inclui o link da página
    ============================================================ */
 let FIN_LIST = [];
 let finFiltro = 'todos';
@@ -70,6 +70,7 @@ function renderFinanceiro() {
       acoes.push(`<button class="icon-btn" title="Baixa manual (pagou na recepção)" onclick="finBaixaManual(${m.id})">✔</button>`);
       acoes.push(`<button class="icon-btn del" title="Cancelar fatura" onclick="finCancelar(${m.id})">🗑</button>`);
     } else if (m.status === 'pago') {
+      if (m.token_publico) acoes.push(`<a class="icon-btn" title="Abrir comprovante (página HealFit)" href="${HF_CONFIG.PAGINA_FATURA}?t=${m.token_publico}" target="_blank" style="text-decoration:none">🔗</a>`);
       acoes.push(`<button class="icon-btn" title="Enviar recibo no WhatsApp" onclick="finRecibo(${m.id})">🧾</button>`);
     }
     return `
@@ -215,12 +216,14 @@ async function finRecibo(id) {
   const dataPagto = pg?.pago_em ?? m.pago_em;
 
   const comp = String(m.competencia).slice(0, 7).split('-').reverse().join('/');
+  const linkComprovante = m.token_publico ? `\n\nComprovante: ${HF_CONFIG.PAGINA_FATURA}?t=${m.token_publico}` : '';
   const msg = encodeURIComponent(
     `*HEALFIT ACADEMIA - RECIBO*\n\n` +
     `Olá, ${m.aluno.split(' ')[0]}!\n` +
     `Confirmamos o recebimento de *${brl(valorRecebido)}* referente à mensalidade ${comp}.\n` +
-    `Data do pagamento: ${fmt(String(dataPagto).slice(0, 10))}\n\n` +
-    `Obrigado e bons treinos!`
+    `Data do pagamento: ${fmt(String(dataPagto).slice(0, 10))}` +
+    linkComprovante +
+    `\n\nObrigado e bons treinos!`
   );
   window.open(`https://wa.me/55${zap}?text=${msg}`, '_blank');
 }
