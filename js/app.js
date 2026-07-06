@@ -91,6 +91,7 @@ function go(v, el) {
   if (v === 'financeiro' && typeof carregarFinanceiro === 'function') carregarFinanceiro();
   if (v === 'despesas'   && typeof carregarDespesas   === 'function') carregarDespesas();
   if (v === 'socios'     && typeof carregarSocios     === 'function') carregarSocios();
+  if (v === 'config'     && typeof carregarConfig     === 'function') carregarConfig();
 }
 
 boot();
