@@ -1,7 +1,6 @@
 /* ============================================================
    HEALFIT — MÓDULO CONFIGURAÇÕES
-   v1.0 — planos (CRUD), controles da geração automática e
-   informações da integração
+   v1.1 — rótulo da pausa explícito com status colorido
    ============================================================ */
 let PLANOS_CFG = [];
 let planoEditId = null;
@@ -41,10 +40,14 @@ async function carregarConfig() {
   (cfg || []).forEach(c => { mapa[c.chave] = c.valor; });
   document.getElementById('cfg-pausa').checked = mapa['geracao_faturas_pausada'] === 'true';
   document.getElementById('cfg-dias').value = mapa['dias_antes_vencimento_gerar'] || '10';
-  document.getElementById('cfg-pausa-lbl').textContent =
-    mapa['geracao_faturas_pausada'] === 'true'
-      ? '⏸ Geração PAUSADA — o cron diário não emite novas faturas.'
-      : '▶ Geração ativa — faturas emitidas automaticamente todo dia.';
+  const lbl = document.getElementById('cfg-pausa-lbl');
+  if (mapa['geracao_faturas_pausada'] === 'true') {
+    lbl.textContent = 'Status atual: PAUSADA — o cron diário NÃO emite novas faturas.';
+    lbl.style.color = 'var(--late)';
+  } else {
+    lbl.textContent = 'Status atual: ATIVA — faturas são emitidas automaticamente todos os dias, respeitando a antecedência abaixo.';
+    lbl.style.color = 'var(--ok)';
+  }
 }
 
 /* ---------------- CONTROLES DA GERAÇÃO ---------------- */
