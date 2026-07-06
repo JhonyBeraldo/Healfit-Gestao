@@ -3,6 +3,9 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+<meta http-equiv="Pragma" content="no-cache">
+<meta http-equiv="Expires" content="0">
 <title>HealFit — Sua fatura</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@75..125,400..900&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
@@ -184,12 +187,12 @@ body{font-family:'Inter',sans-serif;background:var(--brand-dark);color:var(--ink
 
 <div class="foot">
   HealFit Academia · Umuarama-PR<br>
-  <span style="opacity:.6">Pagamentos processados com segurança via Asaas</span>
+  <span style="opacity:.6">Pagamentos processados com segurança via Asaas · fatura v19</span>
 </div>
 
 <div class="toast" id="toast">ok</div>
 
-<script src="js/config.js"></script>
+<script src="js/config.js?v=19"></script>
 <script>
 const db = supabase.createClient(HF_CONFIG.SUPABASE_URL, HF_CONFIG.SUPABASE_ANON);
 const brl = v => 'R$ ' + Number(v || 0).toLocaleString('pt-BR', { minimumFractionDigits: 2 });
@@ -279,8 +282,9 @@ async function carregar(){
     document.getElementById('f-linha').textContent = f.linha_digitavel;
     const pdf = document.getElementById('f-pdf');
     // PDF DIRETO do boleto (sem página de pagamento do Asaas — respeita o
-    // controle de cartão). Fallback: página do Asaas só se o PDF não existir.
+    // controle de cartão). Só cai no invoiceUrl se realmente não houver boleto.
     const urlPdf = f.url_boleto || f.url_fatura;
+    console.log('[HealFit] url_boleto=', f.url_boleto, '| url_fatura=', f.url_fatura, '| usando=', urlPdf);
     if (urlPdf) pdf.href = urlPdf; else pdf.style.display='none';
   } else {
     document.getElementById('met-boleto').style.display='none';
